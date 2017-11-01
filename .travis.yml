@@ -1,0 +1,25 @@
+language: julia
+dist: trusty
+sudo: true
+os:
+  - linux
+  - osx
+julia:
+  - 0.6
+  - nightly
+notifications:
+  email: false
+env:
+  - DOCUMENTER_DEBUG="true" CONDA_JL_VERSION="2" PYTHON=""
+script:
+  - julia -e 'Pkg.clone("https://github.com/zenna/Arrows.jl")'
+  - julia -e 'Pkg.build("Arrows)'
+  - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.build("AlioZoo")'
+  - julia -e 'Pkg.test("AlioZoo", coverage=true)'
+after_success:
+  - julia -e 'cd(Pkg.dir("AlioZoo")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+matrix:
+  fast_finish: true
+  allow_failures:
+    - julia: nightly

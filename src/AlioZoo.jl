@@ -1,5 +1,5 @@
 "Benchmark arrows"
-module BenchmarkArrows
+module AlioZoo
 using Arrows
 import Arrows: add_sub_arr!,
                in_sub_port,
