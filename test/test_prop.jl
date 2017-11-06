@@ -1,6 +1,6 @@
 using NamedTuples
 using Arrows
-import Arrows:PropType
+import Arrows: PropType, ok
 using AlioZoo
 opt = @NT(width = 128, height = 128, nsteps = 15, res = 32, batch_size = 10,
           phong = false, density = 2)
@@ -24,7 +24,17 @@ function test_props()
                                     img => PropType(:size => imgsz)))
 end
 
+test_props()
 
-# Want to be able to to
-# 1. f(x::T) = [a, b, c]
-# 2 .Fro ma
+function test_inv_props()
+  renderarr = render_arrow(opt)
+  invrenderarr = aprx_invert(renderarr)
+  voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
+  voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
+  imgsz = Size([opt.batch_size, opt.width * opt.height])
+  tprp = Arrows.traceprop!(invrenderarr, Dict(voxels => PropType(:size => voxelsz),
+                                         img => PropType(:size => imgsz)))
+  foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
+end
+
+test_inv_props()
