@@ -65,6 +65,8 @@ function innerloop(voxels, step_sz_flat, left_over, orig, rd,
   size(i)
   adj_rd = map(*, rd, step_sz * i)
   pos = map(+, orig, adj_rd)
+  res = opt.res
+  shape = (opt.batch_size, res * res * res)
 
   # convert to indices for voxel cube
   voxel_indices = floor.(Int, pos * opt.res)
@@ -79,28 +81,32 @@ function innerloop(voxels, step_sz_flat, left_over, orig, rd,
   tiled_indices = repeat(flat_indices, inner=opt.batch_size)
   batched_indices = [x_tiled tiled_indices]
   batched_indices = reshape(batched_indices, (opt.batch_size, length(flat_indices), 2))
-  attenuation = gather_nd(voxels, batched_indices)
+  attenuation = gather_nd(voxels, batched_indices, shape)
   res = map(exp, map(*, -attenuation * opt.density, step_sz_flat))
   res
   # exp.(-attenuation * opt.density .* step_sz_flat)
 end
 
 "GatherND, from TensorFlow"
-function gather_nd(params, indices)
+function gather_nd(params, indices, shape)
   indices = indices + 1
   [params[indices[rr,:]...] for rr in CartesianRange(size(indices)[1:end-1])]
 end
 
 "GatherND, from TensorFlow"
-function gather_nd(params::Arrows.AbstractPort, indices::Arrows.AbstractPort)
-  res = Arrows.compose!(vcat(params, indices), GatherNdArrow())[1]
+function gather_nd(params::Arrows.AbstractPort, indices::Arrows.AbstractPort,
+                    shape::Arrows.AbstractPort)
+  res = Arrows.compose!(vcat(params, indices, shape), GatherNdArrow())[1]
 end
 
 "GatherND, from TensorFlow"
-function gather_nd(params::Arrows.AbstractPort, indices::Array{Int64,3})
+function gather_nd(params::Arrows.AbstractPort, indices::Array{Int64,3},
+                    shape_tuple)
+  shape = SourceArrow(shape_tuple)
   indices = SourceArrow(indices)
+  sarr_shape =  add_sub_arr!(parent(params), shape)
   sarr = add_sub_arr!(parent(params), indices)
-  gather_nd(params, ◃(sarr, 1))
+  gather_nd(params, ◃(sarr, 1), ◃(sarr_shape, 1))
 end
 
 "Generate rays origin and step size"
