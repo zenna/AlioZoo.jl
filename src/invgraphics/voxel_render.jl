@@ -82,7 +82,8 @@ function innerloop(voxels, step_sz_flat, left_over, orig, rd,
   batched_indices = [x_tiled tiled_indices]
   batched_indices = reshape(batched_indices, (opt.batch_size, length(flat_indices), 2))
   attenuation = gather_nd(voxels, batched_indices, shape)
-  res = map(exp, map(*, -attenuation * opt.density, step_sz_flat))
+  # res = map(exp, map(*, -attenuation * opt.density, step_sz_flat))
+  res = map(exp, map(*, -attenuation, step_sz_flat))
   res
   # exp.(-attenuation * opt.density .* step_sz_flat)
 end

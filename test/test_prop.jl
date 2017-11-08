@@ -1,9 +1,9 @@
 using NamedTuples
 using Arrows
-import Arrows: PropType, ok
+import Arrows: AbValues
 using AlioZoo
 opt = @NT(width = 128, height = 128, nsteps = 15, res = 32, batch_size = 10,
-          phong = false, density = 2)
+          phong = false, density = 2.5)
 
 
 "Test construction of render array that takes voxel_grid"
@@ -20,21 +20,43 @@ function test_props()
   voxels, img = ⬨(renderarr)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  Arrows.traceprop!(renderarr, Dict(voxels => PropType(:size => voxelsz),
-                                    img => PropType(:size => imgsz)))
+  tprp = Arrows.traceprop!(renderarr, Dict(voxels => AbValues(:size => voxelsz),
+                                    img => AbValues(:size => imgsz)))
 end
 
-test_props()
+# test_props()
 
 function test_inv_props()
   renderarr = render_arrow(opt)
-  invrenderarr = aprx_invert(renderarr)
+  invrenderarr = invert(renderarr)
+  @assert is_wired_ok(invrenderarr)
   voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  tprp = Arrows.traceprop!(invrenderarr, Dict(voxels => PropType(:size => voxelsz),
-                                         img => PropType(:size => imgsz)))
-  foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
-end
+  tprp = Arrows.traceprop!(invrenderarr, Dict(voxels => AbValues(:size => voxelsz),
+                                         img => AbValues(:size => imgsz)))
 
-test_inv_props()
+  pports = get_sub_ports(invrenderarr, is(θp))
+  Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
+  # foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
+end
+# which
+# test_inv_props()
+#
+# :log
+# :/
+# :-
+# :source -  Size propagation
+# :dupl - size prop
+#
+# :inv_dupl - size
+#
+# :mean - size
+# :reduce_var - size
+# :reshape - size
+#
+# Size: any same
+# dupl
+# invdupl
+
+# Set(Symbol[:scatter_nd, :log, :dupl_15, :mean, :/, :reshape, :inv_dupl_15, :-, , :reduce_var])
