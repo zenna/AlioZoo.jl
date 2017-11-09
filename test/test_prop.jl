@@ -50,7 +50,9 @@ function test_inv_props()
 end
 
 function get_input_shapes(abtvals::Arrows.AbTraceValues, arr::CompArrow)
-  get.(collect(values(sub_port_abval(abtvals, :size, get_in_sub_ports(arr)))))
+  abval = sort(collect(sub_port_abval(abtvals, :size, get_in_sub_ports(arr))),
+                by=x->x[1].port_id)
+  get.([v for (k, v) in abval])
 end
 
 function genfakeinputs(shapes)
@@ -76,4 +78,12 @@ function showsize(args...)
   println("OUT ", domathing.(args)...)
 end
 
+# invrenderarr, abtvals = test_inv_props()
+# shapes = get_input_shapes(abtvals, invrenderarr)
+# fakeinputdata = genfakeinputs(shapes)
 # interpret(invrenderarr, fakeinputdata, Arrows.JuliaTarget.JLTarget, (args...)->println(typeof.(args)),(args...)->println(typeof.(args)))
+#
+#
+# for (sp, shape) in zip(get_in_sub_ports(invrenderarr), shapes)
+#   println(sp, ": ", shape)
+# end
