@@ -60,27 +60,20 @@ end
 function run_inverse_render()
   invrenderarr, abtvals = test_inv_props()
   shapes = get_input_shapes(abtvals, invrenderarr)
-  invrenderarr = julia(invrenderarr)
+  invrenderarrjl = julia(invrenderarr)
   fakeinputdata = genfakeinputs(shapes)
-  invrenderarr(fakeinputdata...)
+  invrenderarrjl(fakeinputdata...)
 end
-# which
-# test_inv_props()
-#
-# :log
-# :/
-# :-
-# :source -  Size propagation
-# :dupl - size prop
-#
-# :inv_dupl - size
-#
-# :mean - size
-# :reduce_var - size
-# :reshape - size
-#
-# Size: any same
-# dupl
-# invdupl
 
-# Set(Symbol[:scatter_nd, :log, :dupl_15, :mean, :/, :reshape, :inv_dupl_15, :-, , :reduce_var])
+domathing(x::Tuple) = "TUPLE$x"
+domathing(x::Array) = size(x)
+
+function showintypesize2(arr, args)
+  println("IN ", typeof(deref(arr)), ": ", name(deref(arr))," ", map(size, args)...)
+end
+
+function showsize(args...)
+  println("OUT ", domathing.(args)...)
+end
+
+# interpret(invrenderarr, fakeinputdata, Arrows.JuliaTarget.JLTarget, (args...)->println(typeof.(args)),(args...)->println(typeof.(args)))

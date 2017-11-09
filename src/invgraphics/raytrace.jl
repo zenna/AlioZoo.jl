@@ -26,7 +26,7 @@ struct Intersection{T}
 end
 
 "Linear interpolation between `a` and `b` by factor `mix`"
-mix(a, b, mix::AbstractFloat) = b * mix + a * (1 - mix)
+mix(a, b, mix::Real) = b * mix + a * (1 - mix)
 
 "norm(x)^2"
 dot_self(x) = dot(x, x)
@@ -55,7 +55,7 @@ function rayintersect(r::Ray, s::Sphere)::Intersection
 end
 
 
-function trace(r::Ray, spheres::Vector{Sphere}, depth::Integer)
+function trc(r::Ray, spheres::Vector{Sphere}, depth::Integer)
   tnear = Inf
   areintersections = false
   for sphere in spheres
@@ -63,11 +63,10 @@ function trace(r::Ray, spheres::Vector{Sphere}, depth::Integer)
     if inter.doesintersect > 0
     end
   end
-
   # If no sphere, then output 1,
 end
 
-function render(spheres::Vector{Spehere}, width::Integer. height::Integer,
+function render(spheres::Vector{Sphere}, width::Integer, height::Integer,
                 fov::AbstractFloat)
   inv_width = 1 / width
   inv_height = 1 / height
