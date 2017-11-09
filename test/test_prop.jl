@@ -24,21 +24,45 @@ function test_props()
                                     img => AbValues(:size => imgsz)))
 end
 
-# test_props()
+"a"
+sub_port_abval(abtval::Arrows.AbTraceValues, abvtype::Symbol, sprts::Vector{SubPort}) =
+  Dict(sprt=>abtval[trace_value(sprt)][abvtype] for sprt in sprts)
+
+# fakeinputs() =
+#   map(shape->rand(shape...), get.(collect(values(sub_port_abval(abtval, :size, get_in_sub_ports(invrenderarr))))))
 
 function test_inv_props()
   renderarr = render_arrow(opt)
-  invrenderarr = invert(renderarr)
-  @assert is_wired_ok(invrenderarr)
-  voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
+  duplify!(renderarr)
+  voxels, img = ⬨(renderarr, :voxel), ⬨(renderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  tprp = Arrows.traceprop!(invrenderarr, Dict(voxels => AbValues(:size => voxelsz),
+  invrenderarr = invert(renderarr, inv, Dict(voxels => AbValues(:size => voxelsz),
+                                                  img => AbValues(:size => imgsz)))
+  @assert is_wired_ok(invrenderarr)
+  voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
+  abtvals = Arrows.traceprop!(invrenderarr, Dict(voxels => AbValues(:size => voxelsz),
                                          img => AbValues(:size => imgsz)))
-
   pports = get_sub_ports(invrenderarr, is(θp))
-  Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
+  # Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
+  invrenderarr, abtvals
   # foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
+end
+
+function get_input_shapes(abtvals::Arrows.AbTraceValues, arr::CompArrow)
+  get.(collect(values(sub_port_abval(abtvals, :size, get_in_sub_ports(arr)))))
+end
+
+function genfakeinputs(shapes)
+  (shape->rand(shape...)).(shapes)
+end
+
+function run_inverse_render()
+  invrenderarr, abtvals = test_inv_props()
+  shapes = get_input_shapes(abtvals, invrenderarr)
+  invrenderarr = julia(invrenderarr)
+  fakeinputdata = genfakeinputs(shapes)
+  invrenderarr(fakeinputdata...)
 end
 # which
 # test_inv_props()
