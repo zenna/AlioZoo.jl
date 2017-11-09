@@ -2,7 +2,7 @@ using NamedTuples
 using Arrows
 import Arrows: AbValues
 using AlioZoo
-opt = @NT(width = 128, height = 128, nsteps = 15, res = 32, batch_size = 10,
+opt = @NT(width = 128, height = 128, nsteps = 5, res = 32, batch_size = 5,
           phong = false, density = 2.5)
 
 
@@ -37,7 +37,7 @@ function test_inv_props()
   voxels, img = ⬨(renderarr, :voxel), ⬨(renderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  invrenderarr = invert(renderarr, inv, Dict(voxels => AbValues(:size => voxelsz),
+  invrenderarr = aprx_invert(renderarr, inv, Dict(voxels => AbValues(:size => voxelsz),
                                                   img => AbValues(:size => imgsz)))
   @assert is_wired_ok(invrenderarr)
   voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
