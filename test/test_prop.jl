@@ -32,8 +32,10 @@ sub_port_abval(abtval::Arrows.AbTraceValues, abvtype::Symbol, sprts::Vector{SubP
 #   map(shape->rand(shape...), get.(collect(values(sub_port_abval(abtval, :size, get_in_sub_ports(invrenderarr))))))
 
 function test_inv_props()
-  renderarr = render_arrow(opt)
-  duplify!(renderarr)
+  origrenderarr = render_arrow(opt)
+  duplify!(origrenderarr)
+  renderarr = deepcopy(origrenderarr)
+
   voxels, img = ⬨(renderarr, :voxel), ⬨(renderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
@@ -45,7 +47,7 @@ function test_inv_props()
                                          img => AbValues(:size => imgsz)))
   pports = get_sub_ports(invrenderarr, is(θp))
   # Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
-  invrenderarr, abtvals
+  origrenderarr, invrenderarr, abtvals
   # foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
 end
 
@@ -60,11 +62,25 @@ function genfakeinputs(shapes)
 end
 
 function run_inverse_render()
-  invrenderarr, abtvals = test_inv_props()
+  renderarr, invrenderarr, abtvals = test_inv_props()
   shapes = get_input_shapes(abtvals, invrenderarr)
   invrenderarrjl = julia(invrenderarr)
   fakeinputdata = genfakeinputs(shapes)
   invrenderarrjl(fakeinputdata...)
+end
+
+function train_inv_render()
+  renderarr, invrenderarr, abtvals = test_inv_props()
+  invrenderarr = Arrows.psl(invrenderarr)
+  superarr = Arrows.supervised(renderarr, invrenderarr)
+  suploss = Arrows.supervisedloss(superarr)
+  voxels = ⬨(suploss, :voxel)
+  voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
+  abtvals = Arrows.traceprop!(suploss, Dict(voxels => AbValues(:size => voxelsz)))
+  #
+  nnettarr = first(filter(tarr -> deref(tarr) isa Arrows.UnknownArrow, Arrows.simpletracewalk(x->x, suploss)))
+  tvals = Arrows.trace_values(nnettarr)
+  sizes = [abtvals[tval][:size]  for tval in tvals]
 end
 
 domathing(x::Tuple) = "TUPLE$x"

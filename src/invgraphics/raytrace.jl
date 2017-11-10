@@ -1,41 +1,50 @@
+using ImageView
+using Arrows
 # From:
-# https://www.scratchapixel.com/code/upload/introduction-ren
-dering/raytracer.cpp
+# https://www.scratchapixel.com/code/upload/introduction-rendering/raytracer.cpp
 
-# 1.
+# TODO:
+# Drop Type parameters
+# Make mutable immutable
+# use sqr instead of ^2
+# Use ifelse instead of if
+# PI for less than/greater than
+# Do it without infinity
+# Memory leak somewhere?
 
 "A 3 point vector"
-Vec3{T} = Vector{T}
-Point{T} = Vector{T}
+Vec3 = Vector
+Point = Vector
 
 "A ray with origin `orig` and "
-struct Ray{T}
-  orig::Vec3{T}
-  dir::Vec3{T}
+struct Ray
+  orig::Vec3
+  dir::Vec3
 end
 
 "A sphere"
-struct Sphere{T}
-  center::Point{T} # position of center the sphere
-  radius::T     # radius of sphere
-  surface_color::Vec3{T}  # color of surface
-  reflection::T
-  transparency::T
-  emission_color::T
+struct Sphere
+  center::Point  # position of center the sphere
+  radius         # radius of sphere
+  surface_color  # color of surface
+  reflection
+  transparency
+  emission_color
 end
 
 "Result of intersection between ray and object"
-mutable struct Intersection{T}
-  doesintersect::T
-  t0::T
-  t1::T
+mutable struct Intersection
+  doesintersect
+  t0
+  t1
 end
 
 "Linear interpolation between `a` and `b` by factor `mix`"
 mix(a, b, mix::Real) = b * mix + a * (1 - mix)
 
 "norm(x)^2"
-dot_self(x) = dot(x, x)
+dot_self(x) = dott(x, x)
+dott(xs, ys) = sum(xs .* ys)
 
 "normalized x: `x/norm(x)`"
 simplenormalize(x::Vector) = x / sqrt(dot_self(x))
@@ -43,7 +52,7 @@ simplenormalize(x::Vector) = x / sqrt(dot_self(x))
 function rayintersect(r::Ray, s::Sphere)::Intersection
   s.center
   l = s.center - r.orig
-  tca = dot(l, r.dir)
+  tca = dott(l, r.dir)
   radius2 = s.radius^2
   tca
 
@@ -51,7 +60,7 @@ function rayintersect(r::Ray, s::Sphere)::Intersection
     return Intersection(tca, 0.0, 0.0)
   end
 
-  d2 = dot(l, l) - tca * tca
+  d2 = dott(l, l) - tca * tca
   if d2 > radius2
     return Intersection(s.radius - d2, 0.0, 0.0)
   end
@@ -115,7 +124,7 @@ function render(spheres::Vector{<:Sphere},
 end
 
 "Render an example scene and display it"
-function example()
+function example(spheres)
   sphere = Sphere(Point([10.0, -4.0, 10.0]),
                   10.0,
                   Vec3([1.0, 1.0, 1.0]),
@@ -126,24 +135,19 @@ function example()
   render(spheres)
 end
 
-using Images
-img = example()
-
-colorview(50, 50, Gray, img)
-"A sphere"
-struct Sphere{T}
-  center::Point{T} # position of center the sphere
-  radius::T     # radius of sphere
-  surface_color::Vec3{T}  # color of surface
-  reflection::T
-  transparency::T
-  emission_color::T
-end
-
-function example_spheres()
+function real_example_spheres()
   [Sphere(Vec3([0.0, -10004, -20]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0),
    Sphere(Vec3([0.0,      0, -20]),     4.0, Vec3([1.00, 0.32, 0.36]), 1.0, 0.5, 0.0),
    Sphere(Vec3([5.0,     -1, -15]),     2.0, Vec3([0.90, 0.76, 0.46]), 1.0, 0.0, 0.0),
    Sphere(Vec3([5.0,      0, -25]),     3.0, Vec3([0.65, 0.77, 0.97]), 1.0, 0.0, 0.0),
    Sphere(Vec3([-5.5,      0, -15]),    3.0, Vec3([0.90, 0.90, 0.90]), 1.0, 0.0, 0.0)]
- end
+end
+
+function subport_example_spheres()
+  carr = CompArrow(:raytrace, [:x, :y, :z], Symbol[])
+  x, y, z = ⬨(carr)
+  [Sphere(Vec3([x, y, z]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0)]
+end
+## Example
+
+img = example()
