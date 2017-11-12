@@ -32,10 +32,7 @@ sub_port_abval(abtval::Arrows.AbTraceValues, abvtype::Symbol, sprts::Vector{SubP
 #   map(shape->rand(shape...), get.(collect(values(sub_port_abval(abtval, :size, get_in_sub_ports(invrenderarr))))))
 
 function test_inv_props()
-  origrenderarr = render_arrow(opt)
-  duplify!(origrenderarr)
-  renderarr = deepcopy(origrenderarr)
-
+  renderarr = render_arrow(opt)
   voxels, img = ⬨(renderarr, :voxel), ⬨(renderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
@@ -47,8 +44,7 @@ function test_inv_props()
                                          img => AbValues(:size => imgsz)))
   pports = get_sub_ports(invrenderarr, is(θp))
   # Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
-  origrenderarr, invrenderarr, abtvals
-  # foreach(println, (get(tprp, prt) for prt in ▹(invrenderarr, is(θp))))
+  renderarr, invrenderarr, abtvals
 end
 
 function get_input_shapes(abtvals::Arrows.AbTraceValues, arr::CompArrow)
