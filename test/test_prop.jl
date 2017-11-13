@@ -25,7 +25,7 @@ function test_props()
 end
 
 "a"
-sub_port_abval(abtval::Arrows.AbTraceValues, abvtype::Symbol, sprts::Vector{SubPort}) =
+sub_port_abval(abtval::Arrows.TraceAbValues, abvtype::Symbol, sprts::Vector{SubPort}) =
   Dict(sprt=>abtval[trace_value(sprt)][abvtype] for sprt in sprts)
 
 # fakeinputs() =
@@ -47,7 +47,7 @@ function test_inv_props()
   renderarr, invrenderarr, abtvals
 end
 
-function get_input_shapes(abtvals::Arrows.AbTraceValues, arr::CompArrow)
+function get_input_shapes(abtvals::Arrows.TraceAbValues, arr::CompArrow)
   abval = sort(collect(sub_port_abval(abtvals, :size, get_in_sub_ports(arr))),
                 by=x->x[1].port_id)
   get.([v for (k, v) in abval])
