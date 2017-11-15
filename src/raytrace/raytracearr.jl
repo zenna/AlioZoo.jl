@@ -23,9 +23,9 @@ function rayintersect_arr(vec3size, scalarsize)
   trues = fill(true, scalarsize)
 
   l = scenter - rorig
-  tca = dotarr(l, rdir)
+  tca = dot_arr()(l, rdir)
   radius2 = sradius * sradius
-  d2 = dotarr(l, l) - tca * tca
+  d2 = dot_arr()(l, l) - tca * tca
   cond1 = tca < zeros(Float64, scalarsize)
   cond2 = d2 > radius2
 
@@ -64,8 +64,8 @@ function rayintersect_arr_bcast()
   trues = ◃(truessarr, 1)
 
   l = bcast(scenter) - rorig    # [batch_size, width * height, 3]
-  tca = dotarr(l, rdir)             # [batch_size, width * height, 1]
-  radius2 = sradius * sradius       # [batch_size, 1]
+  tca = dotarr(l, rdir)         # [batch_size, width * height, 1]
+  radius2 = sradius * sradius   # [batch_size, 1]
   d2 = dotarr(l, l) - tca * tca     # [batch_size, width * height, 1]
   cond1 = tca < bcast(zerosscalar) # [batch_size, width * height, 1]
   cond2 = d2 > bcast(radius2)     # [batch_size, width * height, 1]
@@ -155,8 +155,8 @@ end
 
 function test_sizes(batch_size=2, width=5, height=5)
   rsarr = rayintersect_arr_bcast()
-  szs = Dict(:sradius => Size([batch_size, 1]),
-             :scenter => Size([batch_size, 3]),
+  szs = Dict(:sradius => Size([batch_size, 1, 1]),
+             :scenter => Size([batch_size, 1, 3]),
              :rdir => Size([batch_size, width * height, 3]),
              :rorig => Size([batch_size, width * height, 3]),
              :doesintersect => Size([batch_size, width * height, 1]),
