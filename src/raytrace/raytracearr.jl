@@ -9,48 +9,8 @@ function dot_arr()
   dotarr
 end
 
-# const dotarr = dot_arr()
-
 "Ray Sphere Intersection"
-function rayintersect_arr(vec3size, scalarsize)
-  rayint = CompArrow(:raysphere, [:rdir, :rorig, :scenter, :sradius],
-                                 [:doesintersect, :t0, :t1])
-  dotarr = dot_arr()
-  rdir, rorig, scenter, sradius, doesintersect, t0◂, t1◂ = ⬨(rayint)
-  # Constants
-  zerosscalar = zeros(Float64, scalarsize)
-  falses = fill(false, scalarsize)
-  trues = fill(true, scalarsize)
-
-  l = scenter - rorig
-  tca = dot_arr()(l, rdir)
-  radius2 = sradius * sradius
-  d2 = dot_arr()(l, l) - tca * tca
-  cond1 = tca < zeros(Float64, scalarsize)
-  cond2 = d2 > radius2
-
-  # Output 0: doesintersect
-  ifelsedoesintersect = ifelse(cond2, falses, trues)
-  ifelse2 = ifelse(cond1, falses, ifelsedoesintersect)
-  ifelse2 ⥅ doesintersect
-
-  # Output 1: t0
-  r2d2 = radius2 - d2
-  thc = sqrt(r2d2)
-  t0 = tca - thc
-  t0out = ifelse(cond1, zerosscalar, ifelse(cond2, zerosscalar, t0))
-
-  # Output 2: t1
-  t1 = tca + thc
-  t1out = ifelse(cond1, zerosscalar, ifelse(cond2, zerosscalar, t1))
-  t0out ⥅ t0◂
-  t1out ⥅ t1◂
-  @assert is_wired_ok(rayint)
-  rayint
-end
-
-"Ray Sphere Intersection"
-function rayintersect_arr_bcast()
+function rayintersect_arr()
   rayint = CompArrow(:raysphere, [:rdir, :rorig, :scenter, :sradius],
                                  [:doesintersect, :t0, :t1])
   dotarr = dot_arr()
@@ -91,7 +51,6 @@ function rayintersect_arr_bcast()
   @assert is_wired_ok(rayint)
   rayint
 end
-
 
 function leastpositive(shape, xs...)
   lp = first(xs)
@@ -166,41 +125,4 @@ function test_sizes(batch_size=2, width=5, height=5)
   rsarr, traceprop!(rsarr, namesz(rsarr, szs))
 end
 
-function test_rayintersect(width = 6, height = 4, batch_size = 2)
-  vec3size = (batch_size, width * height, 3)
-  scalarsize = (batch_size, width * height, 1) # (batch_size, w * h)
-  outimgsz = (batch_size, width * height, 1)
-
-  rsarr = rayintersect_arr(vec3size, scalarsize)
-  vec3nms = [:rdir, :rorig, :scenter]
-  vec3⬨s = [⬨(rsarr, nm) for nm in vec3nms]
-  scalarnms = [:sradius, :doesintersect, :t0, :t1]
-  scalar⬨s = [⬨(rsarr, nm) for nm in scalarnms]
-
-  d1 = Dict{SubPort, Arrows.AbValues}(vec3▹ => Arrows.AbValues(:size => Size(vec3size)) for vec3▹ in vec3⬨s)
-  d2 = Dict{SubPort, Arrows.AbValues}(scalar⬨ => Arrows.AbValues(:size => Size(scalarsize)) for scalar⬨ in scalar⬨s)
-  invert(rsarr, inv, merge(d1, d2))
-end
-
-function test_trc()
-  rsarr(rand(vec3size...), rand(vec3size...), rand(vec3size...), 1.0)
-  # TensorFlowTarget.Graph(rsarr)
-  nspheres = 3
-  trcarr = trc(nspheres, vec3size, scalarsize)
-  scenters = [rand(vec3size...) for i = 1:nspheres]
-  sradii = [rand(scalarsize...) for i = 1:nspheres]
-  trcarr
-
-  scenters = [Symbol(:scenter, i) for i = 1:nspheres]
-  scenters▹s = map(nm->⬨(trcarr, nm), scenters)
-  sradii = [Symbol(:sradius, i) for i = 1:nspheres]
-  sradii▹s = map(nm->⬨(trcarr, nm), sradii)
-  rdir▹ = ⬨(trcarr, :rdir)
-  rorig▹ = ⬨(trcarr, :rorig)
-
-  tvals1 = Dict{SubPort, Arrows.AbValues}(vec▹ => Arrows.AbValues(:size => Size(vec3size)) for vec▹ in vcat(scenters▹s, rdir▹, rorig▹))
-  tvals2 = Dict{SubPort, Arrows.AbValues}(scal▹ => Arrows.AbValues(:size => Size(scalarsize)) for scal▹ in sradii▹s)
-  tvals3 = Dict{SubPort, Arrows.AbValues}(◃(trcarr, 1) => Arrows.AbValues(:size => Size(outimgsz)))
-  invert(trcarr, inv, merge(tvals1, tvals2, tvals3))
-  # trcarr(rand(vec3size...), rand(shape...), scenters..., sradii...)
-end
+randsz(sz::Arrows.Size) = rand(get(sz)...)

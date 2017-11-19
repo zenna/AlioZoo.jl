@@ -10,6 +10,7 @@ include("kinematics/kinematics.jl")
 include("invgraphics/voxel_render.jl")
 include("raytrace/raytracearr.jl")
 include("invgraphics/util.jl")
+include("stanford.jl")
 
 all_benchmark_arrows() = [fwd_2d_linkage()]
 
