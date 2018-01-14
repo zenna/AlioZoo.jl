@@ -48,6 +48,9 @@ dott(xs, ys) = sum(xs .* ys)
 "normalized x: `x/norm(x)`"
 simplenormalize(x::Vector) = x / sqrt(dot_self(x))
 
+"x iff x > 0 else 0"
+rlu(x) = max(zero(x), x)
+
 function rayintersect(r::Ray, s::Sphere)::Intersection
   s.center
   l = s.center - r.orig
