@@ -1,4 +1,5 @@
 import AlioZoo: render, Sphere, Vec3
+import ImageView
 
 "Render an example scene and display it"
 function render_example_spheres()
@@ -22,3 +23,4 @@ function subport_example_spheres()
 end
 
 img = render_example_spheres()
+ImageView.imshow(img)

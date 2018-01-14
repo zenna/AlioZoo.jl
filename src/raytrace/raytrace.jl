@@ -1,5 +1,3 @@
-using ImageView
-# From:
 # https://www.scratchapixel.com/code/upload/introduction-rendering/raytracer.cpp
 
 # TODO:
@@ -75,6 +73,7 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
   tnear = Inf
   areintersections = false
 
+  # Determine whether this ray hits any of the spheres, and if so, which one
   hit = false
   for (i, sphere) in enumerate(spheres)
     t0 = Inf
@@ -99,6 +98,64 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
   else
     0.0
   end
+
+  surface_color = Vec3([0.0, 0.0, 0.0])
+  phit = r.orig + r.dir * tnear
+  nhit = phit - sphere.center
+  nhit = simplenormalize(nhit)
+
+  # If the normal and the view direction are not opposite to each other
+  # reverse the normal direction. That also means we are inside the sphere so set
+  # the inside bool to true. Finally reverse the sign of IdotN which we want
+  # positive.
+  bias = 1e-4;   # add some bias to the point from which we will be tracing
+  inside = false
+
+  if dot_product(r.dir, nhit) > 0.0
+    nhit = -nhit
+    inside = true
+  end
+
+  if ((sphere->transparency > 0.0 || sphere->reflection > 0.0) && depth < 1)
+    minusrdir = r.dir * -1.0;
+    facingratio = dot_product(minusrdir, nhit)
+
+    # change the mix value to tweak the effect
+    fresneleffect = mix(pow((1.0 - facingratio),3), one, 0.1)
+    # @show facingratio, fresneleffect, -r.dir, nhit
+    # compute reflection direction (not need to normalize because all vectors
+    # are already normalized)
+    refldir = r.dir - nhit * 2 * dot_product(r.dir, nhit)
+    refldir = simplenormalize(refldir);
+    reflection = trace(Ray(phit + nhit * bias, refldir), spheres, depth + 1)
+    refraction = Vec3(zero)
+
+    # the result is a mix of reflection and refraction (if the sphere is transparent)
+    prod = reflection * fresneleffect
+    surface_color = multiply(prod, sphere.surface_color)
+  else
+    for i = 1:len(spheres)
+      if spheres[i].emission_color[1] > 0.0
+        # this is a light
+        transmission = 1.0
+        lightDirection = spheres[i].center - phit
+        lightDirection = normalize(lightDirection)
+
+        for j = 1:len(spheres)
+          if (i != j)
+            r2 = Ray(phit + nhit * bias, lightDirection)
+            inter = rayintersect(r2, spheres[j])
+            if (inter.doesintersect > 0)
+              transmission = 0.0
+            end
+          end
+        end
+        lhs = sphere.surface_color * transmission * rlu(dot_product(nhit, lightDirection))
+        surface_color += elt_multiply(lhs, spheres[i].emission_color)
+      end
+    end
+  end
+  surface_color + sphere.emission_color
 end
 
 "Render `spheres` to image of given `width` and `height`"
