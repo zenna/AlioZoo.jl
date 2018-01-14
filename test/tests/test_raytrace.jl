@@ -1,28 +1,24 @@
-using AlioZoo
-using Arrows
-import AlioZoo: rayintersect_arr
-using TensorFlowTarget
+import AlioZoo: render, Sphere, Vec3
 
-"Test ray trace arrow can be constructed"
-function test_raytrace(batch_size=2, width=5, height=5)
-  rayintersect_arr(batch_size, width, height)
+"Render an example scene and display it"
+function render_example_spheres()
+  spheres = example_spheres()
+  render(spheres)
 end
 
-# test_raytrace()
-
-function test_run_invert(batch_size=2, width=5, height=5)
-  nmabv = NmAbValues(:sradius => AbValues(:size => Size([batch_size, 1, 1])),
-                     :scenter => AbValues(:size => Size([batch_size, 1, 3])),
-                     :rdir => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t0 => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t1 => AbValues(:size => Size([batch_size, width * height, 1])))
-  rsarr = rayintersect_arr(batch_size, width, height)
-  invarr = invert(rsarr, inv, nmabv)
-  invtabv = traceprop!(invarr, nmabv)
-  randin = [randsz(get(invtabv, prt)[:size]) for prt in ▹(invarr)]
-  invarr(randin...)
+"Some example spheres which should create actual image"
+function example_spheres()
+  [Sphere(Vec3([0.0, -10004, -20]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0),
+   Sphere(Vec3([0.0,      0, -20]),     4.0, Vec3([1.00, 0.32, 0.36]), 1.0, 0.5, 0.0),
+   Sphere(Vec3([5.0,     -1, -15]),     2.0, Vec3([0.90, 0.76, 0.46]), 1.0, 0.0, 0.0),
+   Sphere(Vec3([5.0,      0, -25]),     3.0, Vec3([0.65, 0.77, 0.97]), 1.0, 0.0, 0.0),
+   Sphere(Vec3([-5.5,      0, -15]),    3.0, Vec3([0.90, 0.90, 0.90]), 1.0, 0.0, 0.0)]
 end
 
-# test_run_invert()
+function subport_example_spheres()
+  carr = CompArrow(:raytrace, [:x, :y, :z], Symbol[])
+  x, y, z = ⬨(carr)
+  [Sphere(Vec3([x, y, z]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0)]
+end
+
+img = render_example_spheres()

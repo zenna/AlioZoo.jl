@@ -1,5 +1,4 @@
 using ImageView
-using Arrows
 # From:
 # https://www.scratchapixel.com/code/upload/introduction-rendering/raytracer.cpp
 
@@ -102,14 +101,15 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
   end
 end
 
+"Render `spheres` to image of given `width` and `height`"
 function render(spheres::Vector{<:Sphere},
                 width::Integer=480,
                 height::Integer=320,
                 fov::Real=30.0)
-  @show inv_width = 1 / width
-  @show angle = tan(pi * 0.5 * fov / 100.0)
-  @show inv_height = 1 / height
-  @show aspect_ratio = width / height
+  inv_width = 1 / width
+  angle = tan(pi * 0.5 * fov / 100.0)
+  inv_height = 1 / height
+  aspect_ratio = width / height
 
   image = zeros(width, height)
   for y = 1:height, x = 1:width
@@ -122,32 +122,3 @@ function render(spheres::Vector{<:Sphere},
   end
   image
 end
-
-"Render an example scene and display it"
-function example(spheres)
-  sphere = Sphere(Point([10.0, -4.0, 10.0]),
-                  10.0,
-                  Vec3([1.0, 1.0, 1.0]),
-                  1.0,
-                  0.5,
-                  0.5)
-  spheres = example_spheres()
-  render(spheres)
-end
-
-function real_example_spheres()
-  [Sphere(Vec3([0.0, -10004, -20]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0),
-   Sphere(Vec3([0.0,      0, -20]),     4.0, Vec3([1.00, 0.32, 0.36]), 1.0, 0.5, 0.0),
-   Sphere(Vec3([5.0,     -1, -15]),     2.0, Vec3([0.90, 0.76, 0.46]), 1.0, 0.0, 0.0),
-   Sphere(Vec3([5.0,      0, -25]),     3.0, Vec3([0.65, 0.77, 0.97]), 1.0, 0.0, 0.0),
-   Sphere(Vec3([-5.5,      0, -15]),    3.0, Vec3([0.90, 0.90, 0.90]), 1.0, 0.0, 0.0)]
-end
-
-function subport_example_spheres()
-  carr = CompArrow(:raytrace, [:x, :y, :z], Symbol[])
-  x, y, z = ⬨(carr)
-  [Sphere(Vec3([x, y, z]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0)]
-end
-## Example
-
-img = example()

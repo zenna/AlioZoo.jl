@@ -1,7 +1,7 @@
 using Base.Test
 using Arrows
-import Arrows.BenchmarkArrows: STD_ROTATION_MATRIX, render, smallmodelnet, randslice
-import Arrows.TensorFlowTarget: tfapply
+import AlioZoo: STD_ROTATION_MATRIX, render, smallmodelnet, randslice
+import TensorFlowTarget: tfapply
 using NamedTuples
 
 fakevoxels(batch_size) = rand(batch_size, 32, 32, 32)
