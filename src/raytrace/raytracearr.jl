@@ -7,12 +7,15 @@ function dot_arr()
   dotarr
 end
 
+
 "Ray Sphere Intersection"
 function rayintersect_arr(batch_size, width, height)
   rayint = CompArrow(:raysphere, [:rdir, :rorig, :scenter, :sradius],
                                  [:doesintersect, :t0, :t1])
-  sz3 = add_sub_arr!(rayint, source((batch_size, width * height, 3)))
-  sz1 = add_sub_arr!(rayint, source((batch_size, width * height, 1)))
+  size3 = add_sub_arr!(rayint, source((batch_size, width * height, 3)))
+  size1 = add_sub_arr!(rayint, source((batch_size, width * height, 1)))
+  sz1 = ◃(size1, 1)
+  sz3 = ◃(size3, 1)
 
   dotarr = dot_arr()
   rdir, rorig, scenter, sradius, doesintersect, t0◂, t1◂ = ⬨(rayint)
@@ -35,19 +38,19 @@ function rayintersect_arr(batch_size, width, height)
   # Output 0: doesintersect
   # [batch_size, width * height, 1]
   ifelsedoesintersect = ifelse(cond2, exbcast(falses, sz1), exbcast(trues, sz1))
-  ifelse2 = ifelse(cond1, exbcast(falses), ifelsedoesintersect)
+  ifelse2 = ifelse(cond1, exbcast(falses, sz1), ifelsedoesintersect)
   ifelse2 ⥅ doesintersect
 
   # Output 1: t0
-  r2d2 = exbcast(radius2) - d2  # [batch_size, width * height, 1]
-  thc = sqrt(r2d2)                # [batch_size, width * height, 1]
-  t0 = tca - thc                  # [batch_size, width * height, 1]
+  r2d2 = exbcast(radius2, sz1) - d2  # [batch_size, width * height, 1]
+  thc = sqrt(r2d2)                   # [batch_size, width * height, 1]
+  t0 = tca - thc                     # [batch_size, width * height, 1]
   # [batch_size, width * height, 1]
-  t0out = ifelse(cond1, exbcast(zerosscalar), ifelse(cond2, exbcast(zerosscalar, sz1), t0))
+  t0out = ifelse(cond1, exbcast(zerosscalar, sz1), ifelse(cond2, exbcast(zerosscalar, sz1), t0))
 
   # Output 2: t1
   t1 = tca + thc                  # [batch_size, width * height, 1]
-  t1out = ifelse(cond1, exbcast(zerosscalar), ifelse(cond2, exbcast(zerosscalar, sz1), t1))
+  t1out = ifelse(cond1, exbcast(zerosscalar, sz1), ifelse(cond2, exbcast(zerosscalar, sz1), t1))
   t0out ⥅ t0◂
   t1out ⥅ t1◂
   @assert is_wired_ok(rayint)
