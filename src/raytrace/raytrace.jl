@@ -9,6 +9,15 @@
 # Do it without infinity
 # Memory leak somewhere?
 
+
+# What makes arrow version difficult
+# if
+# or
+# greater than
+# inf
+# imperative style of set a value then maybe override it
+# recursion!
+
 "A 3 point vector"
 Vec3 = Vector
 Point = Vector
@@ -73,7 +82,8 @@ function rayintersect(r::Ray, s::Sphere)::Intersection
   Intersection(radius2 - d2, t0, t1)
 end
 
-function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
+function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer,
+             background::Vec3=Vec3([2.0, 2.0, 2.0]))
   tnear = Inf
   areintersections = false
 
@@ -96,12 +106,8 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
       end
     end
   end
-
-  # If no sphere, then output 1,
-  if hit
-    1.0
-  else
-    0.0
+  if !hit
+    return background
   end
 
   surface_color = Vec3([0.0, 0.0, 0.0])
@@ -132,7 +138,7 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer)
     # are already normalized)
     refldir = r.dir - nhit * 2 * dott(r.dir, nhit)
     refldir = simplenormalize(refldir);
-    reflection = trc(Ray(phit + nhit * bias, refldir), spheres, depth + 1)
+    reflection = trc(Ray(phit + nhit * bias, refldir), spheres, depth + 1, background)
     refraction = Vec3([0.0, 0.0, 0.0])
 
     # the result is a mix of reflection and refraction (if the sphere is transparent)
@@ -181,8 +187,6 @@ function render(spheres::Vector{<:Sphere},
     raydir = simplenormalize(Vec3([xx, yy, -1.0]))
     pixel = trc(Ray(Vec3([0.0, 0.0, 0.0]), raydir), spheres, 0)
     image[x, y, :] = pixel
-    # trc(Ray(Vec3([0.0, 0.0, 0.0]), raydir), spheres, 0)
-    zero = 0.0
   end
   image
 end
