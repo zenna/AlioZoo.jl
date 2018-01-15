@@ -1,5 +1,6 @@
 import AlioZoo: render, Sphere, Vec3
 import ImageView
+import Colors
 
 "Render an example scene and display it"
 function render_example_spheres()
@@ -18,11 +19,19 @@ function example_spheres()
    Sphere(Vec3([0.0,     20.0, -30]),  3.0, Vec3([0.00, 0.00, 0.00]), 0.0, 0.0, Vec3([3.0, 3.0, 3.0]))]
 end
 
-function subport_example_spheres()
-  carr = CompArrow(:raytrace, [:x, :y, :z], Symbol[])
-  x, y, z = ⬨(carr)
-  [Sphere(Vec3([x, y, z]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0)]
+
+"Create an rgb image from a 3D matrix (w, h, c)"
+function rgbimg(img)
+  w = size(img)[1]
+  h = size(img)[2]
+  clrimg = Array{Colors.RGB}(w, h)
+  for i = 1:w
+    for j = 1:h
+      clrimg[i,j] = Colors.RGB(img[i,j,:]...)
+    end
+  end
+  clrimg
 end
 
 img = render_example_spheres()
-ImageView.imshow(img)
+ImageView.imshow(rgbimg(img), axes=(2,1))
