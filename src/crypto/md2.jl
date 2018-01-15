@@ -24,12 +24,14 @@ function compress(block, state, checksum)
   end
 
   t = Arrows.promote_constant(block[1] |> Arrows.anyparent, 0)
-  foreach(1:16) do i
+  rounds = 18
+  foreach(1:rounds) do i
     foreach(1:length(newstate)) do j
       t = newstate[j] = newstate[j] ⊻ md2box(t)
     end
-    if i < 16
-      t = (t + i - 1) & 0xFF
+    if i != rounds
+      next_t = t + i - 1
+      t = ifelse(next_t > 0xFF, next_t - 0x100, next_t)
     end
   end
   foreach(link_to_parent!, newstate)
@@ -42,4 +44,4 @@ state = [0 for i in 1:48];
 newstate = compress(block, state, 0)
 println(c(1:16...))
 
-inv_c = Arrows.invert(c)
+inv_c = c |> Arrows.duplify |> Arrows.invert
