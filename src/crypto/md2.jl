@@ -31,7 +31,7 @@ function compress(block, state, checksum)
     end
     if i != rounds
       next_t = t + i - 1
-      t = ifelse(next_t > 0xFF, next_t - 0x100, next_t)
+      t = ifelse(next_t .> 0xFF, next_t .- 0x100, next_t)
     end
   end
   foreach(link_to_parent!, newstate)
@@ -45,3 +45,7 @@ newstate = compress(block, state, 0)
 println(c(1:16...))
 
 inv_c = c |> Arrows.duplify |> Arrows.invert
+md2_pgf = c |> pgf
+
+(md2_pgf >> inv_c)(1:16...)
+wirer, info = Arrows.solve(inv_c);
