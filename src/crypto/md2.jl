@@ -52,7 +52,7 @@ function md2hash()
   checksum = [0 for i in 1:16];
   state, checksum = compress(block, state, checksum)
   state, checksum = compress(checksum, state, checksum)
-  foreach(link_to_parent!, state)
+  foreach(link_to_parent!, state[1:16])
   Arrows.remove_dead_arrows!(carr)
   carr
 end
