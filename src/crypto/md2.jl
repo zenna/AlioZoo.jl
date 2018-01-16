@@ -3,7 +3,7 @@
 using Revise
 using Arrows
 
-
+_BLOCK_SIZE = 16
 
 function md2box(idx::Arrows.AbstractPort)
   res = Arrows.compose!(vcat(idx), Arrows.MD2SBoxArrow())[1]
@@ -16,6 +16,7 @@ end
 
 function compress(block, state, checksum)
   newstate = Array{Any, 1}(size(state)...)
+  newchecksum = Array{Any, 1}(size(checksum)...)
   foreach(1:16) do  i
     b = block[i]
     newstate[i] = state[i]
@@ -34,23 +35,44 @@ function compress(block, state, checksum)
       t = ifelse(next_t .> 0xFF, next_t .- 0x100, next_t)
     end
   end
-  foreach(link_to_parent!, newstate)
+  l = checksum[end]
+  foreach(1:16) do i
+    l = checksum[i] ⊻ md2box(block[i] ⊻ l)
+    newchecksum[i] = l
+  end
+  newstate, newchecksum
 end
 
 
 
+function md2hash()
+  carr = CompArrow(:compress, 16, 0);
+  block = ▹(carr);
+  state = [0 for i in 1:48];
+  checksum = [0 for i in 1:16];
+  state, checksum = compress(block, state, checksum)
+  state, checksum = compress(checksum, state, checksum)
+  foreach(link_to_parent!, state)
+  Arrows.remove_dead_arrows!(carr)
+  carr
+end
 
-c = CompArrow(:compress, 16, 0);
-block = in_sub_ports(c);
-state = [0 for i in 1:48];
-newstate = compress(block, state, 0)
-println(c(1:16...))
+carr = md2hash()
+println(carr(1:16...))
 
-inv_c = c |> Arrows.duplify |> Arrows.invert
-md2_pgf = c |> pgf
+if false
+  c = CompArrow(:compress, 16, 0);
+  block = in_sub_ports(c);
+  state = [0 for i in 1:48];
+  newstate = compress(block, state, 0)
+  println(c(1:16...))
 
-(md2_pgf >> inv_c)(1:16...)
-wirer, info = Arrows.solve(inv_c);
+  inv_c = c |> Arrows.duplify |> Arrows.invert
+  md2_pgf = c |> pgf
+
+  (md2_pgf >> inv_c)(1:16...)
+  wirer, info = Arrows.solve(inv_c);
+end
 
 """
  An alternative to overcome the performance issues of julia is to use
