@@ -1,3 +1,20 @@
+
+# What makes arrow version difficult
+# if
+# or
+# greater than
+# inf
+# imperative style of set a value then maybe override it
+# recursion!
+
+# o get simple version working first
+
+# Problem, we need the sphere which we hit, not just the cloeset point
+# Problem. The full function gets pretty complex.  Will we get the parameter explosion problem
+# Problem. Lots of control flow. We don't have a PI for this.
+# Problem. No recursion so need to unroll?
+
+"Dot product"
 function dot_arr()
   dotarr = CompArrow(:dot, [:xs, :ys], [:dot])
   xs, ys, dot = ⬨(dotarr)
@@ -6,7 +23,6 @@ function dot_arr()
   @assert is_wired_ok(dotarr)
   dotarr
 end
-
 
 "Ray Sphere Intersection"
 function rayintersect_arr(batch_size, width, height)
@@ -33,9 +49,9 @@ function rayintersect_arr(batch_size, width, height)
   radius2 = sradius * sradius   # [batch_size, 1]
   d2 = dotarr(l, l) - tca * tca     # [batch_size, width * height, 1]
   cond1 = tca < exbcast(zerosscalar, sz1) # [batch_size, width * height, 1]
-  cond2 = d2 > exbcast(radius2, sz1)     # [batch_size, width * height, 1]
 
   # Output 0: doesintersect
+  cond2 = d2 > exbcast(radius2, sz1)     # [batch_size, width * height, 1]
   # [batch_size, width * height, 1]
   ifelsedoesintersect = ifelse(cond2, exbcast(falses, sz1), exbcast(trues, sz1))
   ifelse2 = ifelse(cond1, exbcast(falses, sz1), ifelsedoesintersect)
@@ -66,13 +82,14 @@ function leastpositive(shape, xs...)
   lp
 end
 
-function trc(nspheres::Integer, vec3size, scalarsize)
-  rayintersectarr = rayintersect_arr(vec3size, scalarsize)
+"Renders spheres, just black and white renderer"
+function trc(nspheres, batch_size, width, height)
+  rayintersectarr = rayintersect_arr(batch_size, width, height)
   scenters = [Symbol(:scenter, i) for i = 1:nspheres]
   sradii = [Symbol(:sradius, i) for i = 1:nspheres]
   trcarr = CompArrow(:trccarr,
                       vcat([:rorig, :rdir], scenters, sradii),
-                      [:didhit, :closest])
+                      [:doesintersect])
   scenters▹ = map(nm->⬨(trcarr, nm), scenters)
   sradii▹ = map(nm->⬨(trcarr, nm), sradii)
   rdir▹ = ⬨(trcarr, :rdir)
@@ -87,10 +104,12 @@ function trc(nspheres::Integer, vec3size, scalarsize)
     push!(allts, t1◃)
     push!(allhits, hit◃)
   end
-  didhit = +(allhits...)
-  closest = leastpositive(scalarsize, allts...)
-  didhit ⥅ ◃(trcarr, 1)
-  closest ⥅ ◃(trcarr, 2)
+  doesintersect = |(allhits...) # Should be logical OR
+  doesintersect ⥅ ◃(trcarr, 1)
+  foreach(link_to_parent!, allts)
+
+  # closest = leastpositive(scalarsize, allts...)
+  # closest ⥅ ◃(trcarr, 2)
   @assert is_wired_ok(trcarr)
   trcarr
 end

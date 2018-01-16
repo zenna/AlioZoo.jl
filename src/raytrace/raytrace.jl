@@ -10,14 +10,6 @@
 # Memory leak somewhere?
 
 
-# What makes arrow version difficult
-# if
-# or
-# greater than
-# inf
-# imperative style of set a value then maybe override it
-# recursion!
-
 "A 3 point vector"
 Vec3 = Vector
 Point = Vector
@@ -106,6 +98,7 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer,
       end
     end
   end
+
   if !hit
     return background
   end
@@ -119,7 +112,7 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer,
   # reverse the normal direction. That also means we are inside the sphere so set
   # the inside bool to true. Finally reverse the sign of IdotN which we want
   # positive.
-  bias = 1e-4;   # add some bias to the point from which we will be tracing
+  bias = 1e-4   # add some bias to the point from which we will be tracing
   inside = false
 
   if dott(r.dir, nhit) > 0.0
@@ -149,19 +142,19 @@ function trc(r::Ray, spheres::Vector{<:Sphere}, depth::Integer,
       if spheres[i].emission_color[1] > 0.0
         # this is a light
         transmission = 1.0
-        lightDirection = spheres[i].center - phit
-        lightDirection = normalize(lightDirection)
+        light_dir = spheres[i].center - phit
+        light_dir = normalize(light_dir)
 
         for j = 1:length(spheres)
           if (i != j)
-            r2 = Ray(phit + nhit * bias, lightDirection)
+            r2 = Ray(phit + nhit * bias, light_dir)
             inter = rayintersect(r2, spheres[j])
             if (inter.doesintersect > 0)
               transmission = 0.0
             end
           end
         end
-        lhs = sphere.surface_color * transmission * rlu(dott(nhit, lightDirection))
+        lhs = sphere.surface_color * transmission * rlu(dott(nhit, light_dir))
         surface_color += map(*, lhs, spheres[i].emission_color)
       end
     end
