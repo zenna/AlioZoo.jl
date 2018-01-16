@@ -25,10 +25,10 @@ function compress(block, state, checksum, rounds=18)
     newstate[i + 32] = b ⊻ newstate[i]
   end
 
-  t = Arrows.promote_constant(block[1] |> Arrows.anyparent, 0)
+  t = 0
   foreach(1:rounds) do i
     foreach(1:length(newstate)) do j
-      t = newstate[j] = newstate[j] ⊻ md2box(t)
+      t = newstate[j] = newstate[j] ⊻ Arrows.md2box(t)
     end
     if i != rounds
       next_t = t + i - 1
