@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 exclude = []
 test_dir = joinpath(Pkg.dir("AlioZoo"), "test", "tests")
 tests = setdiff(readdir(test_dir), exclude)
@@ -14,4 +15,3 @@ end
 # print method ambiguities
 println("Potentially stale exports: ")
 display(Base.Test.detect_ambiguities(AlioZoo))
-println()
