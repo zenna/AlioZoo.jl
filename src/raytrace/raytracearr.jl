@@ -25,7 +25,7 @@ function dot_arr()
 end
 
 "Ray Sphere Intersection"
-function rayintersect_arr(batch_size, width, height)
+function rayintersect_arr(batch_size=1, width=100, height=100)
   rayint = CompArrow(:raysphere, [:rdir, :rorig, :scenter, :sradius],
                                  [:doesintersect, :t0, :t1])
   size3 = add_sub_arr!(rayint, source((batch_size, width * height, 3)))
@@ -83,13 +83,15 @@ function leastpositive(shape, xs...)
 end
 
 "Renders spheres, just black and white renderer"
-function trc(nspheres, batch_size, width, height)
+function trc(nspheres=3, batch_size=1, width=100, height=100)
   rayintersectarr = rayintersect_arr(batch_size, width, height)
   scenters = [Symbol(:scenter, i) for i = 1:nspheres]
   sradii = [Symbol(:sradius, i) for i = 1:nspheres]
   trcarr = CompArrow(:trccarr,
                       vcat([:rorig, :rdir], scenters, sradii),
-                      [:doesintersect])
+                      #[:doesintersect]
+                      Symbol[]
+                      )
   scenters▹ = map(nm->⬨(trcarr, nm), scenters)
   sradii▹ = map(nm->⬨(trcarr, nm), sradii)
   rdir▹ = ⬨(trcarr, :rdir)
@@ -104,12 +106,39 @@ function trc(nspheres, batch_size, width, height)
     push!(allts, t1◃)
     push!(allhits, hit◃)
   end
-  doesintersect = |(allhits...) # Should be logical OR
-  doesintersect ⥅ ◃(trcarr, 1)
   foreach(link_to_parent!, allts)
+  foreach(link_to_parent!, allhits)
+  @assert is_valid(trcarr)
+  return trcarr
+  # 
+  #
+  # doesintersect = |(allhits...) # Should be logical OR
+  # doesintersect ⥅ ◃(trcarr, 1)
+  # foreach(link_to_parent!, allts)
+  #
+  # # closest = leastpositive(scalarsize, allts...)
+  # # closest ⥅ ◃(trcarr, 2)
+  # @assert is_wired_ok(trcarr)
+  # trcarr
+end
 
-  # closest = leastpositive(scalarsize, allts...)
-  # closest ⥅ ◃(trcarr, 2)
-  @assert is_wired_ok(trcarr)
-  trcarr
+function rtabv(batch_size=1, width=100, height=100)
+  nmabv = NmAbValues(:sradius => AbValues(:size => Size([batch_size, 1, 1])),
+                     :scenter => AbValues(:size => Size([batch_size, 1, 3])),
+                     :rdir => AbValues(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])),
+                     :t0 => AbValues(:size => Size([batch_size, width * height, 1])),
+                     :t1 => AbValues(:size => Size([batch_size, width * height, 1])))
+end
+
+function trcabv(nspheres=3, batch_size=1, width=100, height=100)
+  nmabv = NmAbValues(:rdir => AbValues(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])))
+  for i = 1:nspheres
+    nmabv[Symbol(:scenter, i)] = AbValues(:size => Size([batch_size, 1, 3]))
+    nmabv[Symbol(:sradius, i)] = AbValues(:size => Size([batch_size, 1, 1]))
+  end
+  nmabv
 end

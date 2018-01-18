@@ -119,7 +119,7 @@ function validpath(points, obstacles)
 end
 
 "Forward kinematics of 2D robot arm"
-function fwd_2d_linkage(nlinks::Integer)
+function fwd_2d_linkage(nlinks::Integer=2)
   inp_names = [Symbol(:ϕ_, i) for i=1:nlinks]
   carr = CompArrow(:fwd_kin, inp_names, [:x, :y])
   angles = ▹(carr)

@@ -13,7 +13,12 @@ include("raytrace/raytrace.jl")
 include("raytrace/raytracearr.jl")
 #include("stanford.jl")
 
-all_benchmark_arrows() = [fwd_2d_linkage()]
+all_benchmark_arrows() = [fwd_2d_linkage(),
+                          trc()]
+
+"All pairs of (Arrow, XAbValues)"
+all_benchmark_arrow_xabv() = [(fwd_2d_linkage(), NmAbValues())
+                              (trc(), trcabv())]
 
 export fwd_2d_linkage,
        all_example_arrows,
