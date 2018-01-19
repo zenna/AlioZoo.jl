@@ -32,7 +32,7 @@ function compress(block, state, checksum, rounds=18)
     end
     if i != rounds
       next_t = t + i - 1
-      t = ifelse(next_t .> 0xFF, next_t .- 0x100, next_t)
+      t = next_t % 256
     end
   end
   l = checksum[end]

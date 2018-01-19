@@ -16,18 +16,27 @@ test_md2()
 
 
 function test_solver()
-    hash_carr = AlioZoo.md2hash(2)
-    inv_carr = hash_carr |> invert
-    wired = Arrows.solve_md2(inv_carr)
-    hash_pgf = hash_carr |> pgf
-    inputs = 1:16
-    outputs = map(zip(◂(hash_pgf), hash_pgf(inputs...))) do out
-        p, v = out
-        name(p), v
-    end
-    outputs = Dict(outputs)
-    inputs_wired = [outputs[p] for p in name.(▸(wired))]
-    @test wired(inputs_wired...) == (inputs...)
+  hash_carr = AlioZoo.md2hash(2)
+  inv_carr = hash_carr |> invert
+  wired, wirer = Arrows.solve_md2(inv_carr)
+  hash_pgf = hash_carr |> pgf
+  inputs = 1:16
+  outputs = map(zip(◂(hash_pgf), hash_pgf(inputs...))) do out
+    p, v = out
+    name(p), v
+  end
+  outputs = Dict(outputs)
+  inputs_wired = [outputs[p] for p in name.(▸(wired))]
+  @test wired(inputs_wired...) == (inputs...)
 end
 
 test_solver()
+
+function generate_function(context, expr)
+  M = Module()
+  for (k,v) in context
+         eval(M, :($k = $v))
+  end
+  eval(M, :(using Arrows))
+  eval(M, expr)
+end
