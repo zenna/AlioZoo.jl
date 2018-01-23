@@ -39,3 +39,13 @@ function generate_function(context, expr)
   eval(M, :(using Arrows))
   eval(M, expr)
 end
+
+function test_pipeline()
+  carr = AlioZoo.md2hash(2)
+  inv_carr = carr |> invert
+  wired, wirer = Arrows.solve_md2(inv_carr)
+  context = Dict{Symbol, Any}()
+  solved, unsolved, context = Arrows.find_unsolved_constraints(carr, inv_carr,
+                                                              wirer, context)
+  @show unsolved
+end
