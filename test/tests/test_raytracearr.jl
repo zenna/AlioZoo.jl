@@ -2,7 +2,6 @@ using Base.Test
 using AlioZoo
 import AlioZoo: rayintersect_arr, trc
 using Arrows
-using TensorFlowTarget
 
 "Test ray trace arrow can be constructed"
 function test_raytrace(batch_size=2, width=5, height=5)

@@ -1,3 +1,6 @@
+using AlioZoo
+using Base.Test
+
 exclude = ["test_voxel.jl"] #FIXME re-add test_voxel
 test_dir = joinpath(Pkg.dir("AlioZoo"), "test", "tests")
 tests = setdiff(readdir(test_dir), exclude)
