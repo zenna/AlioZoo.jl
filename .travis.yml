@@ -18,6 +18,7 @@ script:
   - julia -e 'Pkg.clone("NLopt")'
   - julia -e 'Pkg.build("NLopt")'
   - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.add("ImageView")'  
   - julia -e 'Pkg.build("AlioZoo")'
   - julia -e 'Pkg.test("AlioZoo", coverage=true)'
 after_success:
