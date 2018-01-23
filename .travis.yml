@@ -14,7 +14,9 @@ env:
 script:
   - julia -e 'Pkg.clone("https://github.com/zenna/Spec.jl")'
   - julia -e 'Pkg.clone("https://github.com/zenna/Arrows.jl")'
-  - julia -e 'Pkg.build("Arrows)'
+  - julia -e 'Pkg.build("Arrows")'
+  - julia -e 'Pkg.clone("NLopt")'
+  - julia -e 'Pkg.build("NLopt")'
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.build("AlioZoo")'
   - julia -e 'Pkg.test("AlioZoo", coverage=true)'
