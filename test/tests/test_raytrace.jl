@@ -33,5 +33,7 @@ function rgbimg(img)
   clrimg
 end
 
-img = render_example_spheres()
-ImageView.imshow(rgbimg(img), axes=(2,1))
+function test_show_img()
+  img = render_example_spheres()
+  ImageView.imshow(rgbimg(img), axes=(2,1))
+end
