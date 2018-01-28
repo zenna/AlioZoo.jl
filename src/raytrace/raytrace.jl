@@ -183,3 +183,42 @@ function render(spheres::Vector{<:Sphere},
   end
   image
 end
+
+"Generate ray dirs and ray origins"
+function rdirs_rorigs(width::Integer=480,
+                      height::Integer=320,
+                      fov::Real=30.0)
+  inv_width = 1 / width
+  angle = tan(pi * 0.5 * fov / 100.0)
+  inv_height = 1 / height
+  aspect_ratio = width / height
+
+  image = zeros(width, height, 3)
+  rdirs = Array{Float64}(width * height, 3)
+  rorigs = Array{Float64}(width * height, 3)
+  j = 1
+  for y = 1:height, x = 1:width
+    xx = (2 * ((x + 0.5) * inv_width) - 1) * angle * aspect_ratio
+    yy = (1 - 2 * ((y + 0.5) * inv_height)) * angle
+    minus1 = -1.0
+    raydir = simplenormalize(Vec3([xx, yy, -1.0]))
+    rorig = Vec3([0.0, 0.0, 0.0])
+    rdirs[j, :] = raydir
+    rorigs[j, :] = rorig
+    # pixel = trc(Ray(Vec3([0.0, 0.0, 0.0]), raydir), spheres, 0)
+    # image[x, y, :] = pixel
+    j += 1
+  end
+  rdirs, rorigs
+end
+
+"Some example spheres which should create actual image"
+function example_spheres()
+  [Sphere(Vec3([0.0, -10004, -20]), 10000.0, Vec3([0.20, 0.20, 0.20]), 0.0, 0.0, 0.0),
+   Sphere(Vec3([0.0,      0, -20]),     4.0, Vec3([1.00, 0.32, 0.36]), 1.0, 0.5, 0.0),
+   Sphere(Vec3([5.0,     -1, -15]),     2.0, Vec3([0.90, 0.76, 0.46]), 1.0, 0.0, 0.0),
+   Sphere(Vec3([5.0,      0, -25]),     3.0, Vec3([0.65, 0.77, 0.97]), 1.0, 0.0, 0.0),
+   Sphere(Vec3([-5.5,      0, -15]),    3.0, Vec3([0.90, 0.90, 0.90]), 1.0, 0.0, 0.0),
+   # light (emission > 0)
+   Sphere(Vec3([0.0,     20.0, -30]),  3.0, Vec3([0.00, 0.00, 0.00]), 0.0, 0.0, Vec3([3.0, 3.0, 3.0]))]
+end

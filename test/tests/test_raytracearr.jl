@@ -5,10 +5,39 @@ using Arrows
 
 "Test ray trace arrow can be constructed"
 function test_raytrace(batch_size=2, width=5, height=5)
-  rayintersect_arr(batch_size, width, height)
+  @grab arr = rayintersect_arr(batch_size, width, height)
 end
 
-test_raytrace()
+"Make a batch of `arr` of size `batch_size`"
+function batch(arr::Array, batch_size::Integer)
+  newshape = (1, size(arr)...)
+  repeat(reshape(arr, newshape), inner = (batch_size, (1 for i = 1:ndims(arr))...))
+end
+
+function test_raytrace_execute(batch_size=1, width=480, height=320)
+  rtarr = rayintersect_arr(batch_size, width, height)
+  
+  # Get input scene
+  rdir, rorig = AlioZoo.rdirs_rorigs(width, height)
+  rdir = batch(rdir, batch_size)
+  rorig = batch(rorig, batch_size)  
+  sphere = AlioZoo.example_spheres()[2]
+  sradius = batch(reshape([sphere.radius], (1,1)), batch_size)
+  scenter = batch(reshape(sphere.center, (1, 3)), batch_size)
+  # Need to totalize forward arrow because we don't have proper control flow
+  # and bad branch leads to inverse values of sqrt 
+  rtarr = Arrows.aprx_totalize(rtarr)
+  @grab rdir
+  @grab rorig
+  @grab scenter
+  @grab sradius
+  @grab rtarr
+  rtarr(rdir, rorig, scenter, sradius)
+end
+
+out = test_raytrace_execute()
+
+@assert false
 
 function test_trc(nspheres=3, batch_size=2, width=5, height=5)
   arr = trc(nspheres, batch_size, width, height)

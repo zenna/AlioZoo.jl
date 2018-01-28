@@ -18,8 +18,8 @@ all_benchmark_arrows() = [fwd_2d_linkage(),
                           trc()]
 
 "All pairs of (Arrow, XAbValues)"
-all_benchmark_arrow_xabv() = [(fwd_2d_linkage(), NmAbValues()),
-                              (md2hash(2), NmAbValues()),
+all_benchmark_arrow_xabv() = [md2hash(2),
+                              (fwd_2d_linkage(), NmAbValues()),
                               (trc(), trcabv())]
 
 export fwd_2d_linkage,
