@@ -127,24 +127,33 @@ function trc(nspheres=3, batch_size=1, width=10, height=10)
 end
 
 function rtabv(batch_size=1, width=10, height=10)
-  nmabv = NmAbValues(:sradius => AbValues(:size => Size([batch_size, 1, 1])),
-                     :scenter => AbValues(:size => Size([batch_size, 1, 3])),
-                     :rdir => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t0 => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t1 => AbValues(:size => Size([batch_size, width * height, 1])))
+  nmabv = NmAbVals(:sradius => AbVals(:size => Size([batch_size, 1, 1])),
+                     :scenter => AbVals(:size => Size([batch_size, 1, 3])),
+                     :rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])),
+                     :t0 => AbVals(:size => Size([batch_size, width * height, 1])),
+                     :t1 => AbVals(:size => Size([batch_size, width * height, 1])))
 end
 
 function trcabv(nspheres=3, batch_size=1, width=10, height=10)
-  nmabv = NmAbValues(:rdir => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])))
+  nmabv = NmAbVals(:rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])))
   for i = 1:nspheres
-    nmabv[Symbol(:scenter, i)] = AbValues(:size => Size([batch_size, 1, 3]))
-    nmabv[Symbol(:sradius, i)] = AbValues(:size => Size([batch_size, 1, 1]))
+    nmabv[Symbol(:scenter, i)] = AbVals(:size => Size([batch_size, 1, 3]))
+    nmabv[Symbol(:sradius, i)] = AbVals(:size => Size([batch_size, 1, 1]))
   end
   nmabv
+end
+
+"Abv for raytraceintersection"
+function rint_xabv(batch_size=2, width=5, height=5)
+  NmAbVals(:rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+           :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+           :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])),
+           :scenter => AbVals(:size => Size([batch_size, width * height, 3])),
+           :sradius => AbVals(:size => Size([batch_size, width * height, 1])))
 end
 
 "Generate ray dirs and ray origins"

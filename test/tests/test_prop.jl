@@ -1,6 +1,6 @@
 using NamedTuples
 using Arrows
-import Arrows: AbValues
+import Arrows: AbVals
 using AlioZoo
 opt = @NT(width = 128, height = 128, nsteps = 5, res = 32, batch_size = 5,
           phong = false, density = 2.5)
@@ -20,12 +20,12 @@ function test_props()
   voxels, img = ⬨(renderarr)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  tprp = Arrows.traceprop!(renderarr, Dict(voxels => AbValues(:size => voxelsz),
-                                    img => AbValues(:size => imgsz)))
+  tprp = Arrows.traceprop!(renderarr, Dict(voxels => AbVals(:size => voxelsz),
+                                    img => AbVals(:size => imgsz)))
 end
 
 "a"
-sub_port_abval(abtval::Arrows.TraceAbValues, abvtype::Symbol, sprts::Vector{SubPort}) =
+sub_port_abval(abtval::Arrows.TraceAbVals, abvtype::Symbol, sprts::Vector{SubPort}) =
   Dict(sprt=>abtval[trace_value(sprt)][abvtype] for sprt in sprts)
 
 # fakeinputs() =
@@ -36,18 +36,18 @@ function test_inv_props()
   voxels, img = ⬨(renderarr, :voxel), ⬨(renderarr, :img)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
   imgsz = Size([opt.batch_size, opt.width * opt.height])
-  invrenderarr = aprx_invert(renderarr, inv, Dict(voxels => AbValues(:size => voxelsz),
-                                                  img => AbValues(:size => imgsz)))
+  invrenderarr = aprx_invert(renderarr, inv, Dict(voxels => AbVals(:size => voxelsz),
+                                                  img => AbVals(:size => imgsz)))
   @assert is_wired_ok(invrenderarr)
   voxels, img = ⬨(invrenderarr, :voxel), ⬨(invrenderarr, :img)
-  abtvals = Arrows.traceprop!(invrenderarr, Dict(voxels => AbValues(:size => voxelsz),
-                                         img => AbValues(:size => imgsz)))
+  abtvals = Arrows.traceprop!(invrenderarr, Dict(voxels => AbVals(:size => voxelsz),
+                                         img => AbVals(:size => imgsz)))
   pports = get_sub_ports(invrenderarr, is(θp))
   # Dict(pport=>trace_value(pport) in keys(tprp) for pport in pports)
   renderarr, invrenderarr, abtvals
 end
 
-function get_input_shapes(abtvals::Arrows.TraceAbValues, arr::CompArrow)
+function get_input_shapes(abtvals::Arrows.TraceAbVals, arr::CompArrow)
   abval = sort(collect(sub_port_abval(abtvals, :size, get_in_sub_ports(arr))),
                 by=x->x[1].port_id)
   get.([v for (k, v) in abval])
@@ -72,7 +72,7 @@ function train_inv_render()
   suploss = Arrows.supervisedloss(superarr)
   voxels = ⬨(suploss, :voxel)
   voxelsz = Size([opt.batch_size, opt.res, opt.res, opt.res])
-  abtvals = Arrows.traceprop!(suploss, Dict(voxels => AbValues(:size => voxelsz)))
+  abtvals = Arrows.traceprop!(suploss, Dict(voxels => AbVals(:size => voxelsz)))
   #
   nnettarr = first(filter(tarr -> deref(tarr) isa Arrows.UnknownArrow, Arrows.simpletracewalk(x->x, suploss)))
   tvals = Arrows.trace_values(nnettarr)

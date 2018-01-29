@@ -17,9 +17,9 @@ include("crypto/md2.jl")
 all_benchmark_arrows() = [fwd_2d_linkage(),
                           trc()]
 
-"All pairs of (Arrow, XAbValues)"
+"All pairs of (Arrow, XAbVals)"
 all_benchmark_arrow_xabv() = [md2hash(2),
-                              (fwd_2d_linkage(), NmAbValues()),
+                              (fwd_2d_linkage(), NmAbVals()),
                               (trc(), trcabv())]
 
 export fwd_2d_linkage,
