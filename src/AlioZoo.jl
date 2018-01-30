@@ -11,6 +11,7 @@ include("invgraphics/voxel_render.jl")
 include("invgraphics/util.jl")
 include("raytrace/raytrace.jl")
 include("raytrace/raytracearr.jl")
+include("draw/draw.jl")
 include("crypto/md2.jl")
 #include("stanford.jl")
 
