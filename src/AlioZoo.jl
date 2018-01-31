@@ -15,13 +15,7 @@ include("draw/draw.jl")
 include("crypto/md2.jl")
 #include("stanford.jl")
 
-all_benchmark_arrows() = [fwd_2d_linkage(),
-                          trc()]
-
-"All pairs of (Arrow, XAbVals)"
-all_benchmark_arrow_xabv() = [md2hash(2),
-                              (fwd_2d_linkage(), NmAbVals()),
-                              (trc(), trcabv())]
+include("bundles.jl")
 
 export fwd_2d_linkage,
        all_example_arrows,

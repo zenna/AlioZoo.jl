@@ -60,7 +60,9 @@ function drawstrokes(strokes, width, height)
   A
 end
 
-function loaddata(datapath = joinpath(ENV["DATADIR"], "quickdraw", "full_simplified_laptop.ndjson"))
+function loaddata(;imgtype = "laptop",
+                  datapath = joinpath(ENV["DATADIR"], "quickdraw",
+                                      "full_simplified_$(imgtype).ndjson"))
   f = open(datapath)
   drawings = map(eachline(f)) do l1
     parsed = JSON.parse(l1)
@@ -68,8 +70,6 @@ function loaddata(datapath = joinpath(ENV["DATADIR"], "quickdraw", "full_simplif
     # img = draw(1, 1, 3, 100, 100)
   end
 end
-
-data = loaddata()
 
 function drawdata(lines)
   img = drawstrokes(lines, 256, 256)
