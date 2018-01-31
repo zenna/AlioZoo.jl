@@ -1,7 +1,7 @@
 # Run tests on set of arrows
 
 using Arrows
-import Arrows: XAbValues
+import Arrows: XAbVals
 import AlioZoo: all_benchmark_arrow_xabv
 
 """
@@ -18,7 +18,7 @@ Then quantitative analysis
 5. Try a preimage attack
 
 """
-function suite(arr::Arrow, xabv::XAbValues)
+function suite(arr::Arrow, xabv::XAbVals)
   @assert is_valid(arr)
   println("\nTesting ", arr)
   println("xabv", xabv)

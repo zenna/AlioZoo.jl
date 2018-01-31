@@ -16,7 +16,7 @@
 
 "Dot product"
 function dot_arr()
-  dotarr = CompArrow(:dot, [:xs, :ys], [:dot])
+  dotarr = CompArrow(:simple_dot, [:xs, :ys], [:dot])
   xs, ys, dot = ⬨(dotarr)
   reducesum = Arrows.ReduceSumArrow(3, true)
   reducesum(map(*, xs, ys)) ⥅ ◃(dotarr, 1)
@@ -26,8 +26,13 @@ end
 
 "Ray Sphere Intersection"
 function rayintersect_arr(batch_size=1, width=10, height=10)
-  rayint = CompArrow(:raysphere, [:rdir, :rorig, :scenter, :sradius],
-                                 [:doesintersect, :t0, :t1])
+  rayint = CompArrow(:raysphere, [:rdir,          # [batch_size, width * height, 3]
+                                 :rorig,          # [batch_size, width * height, 3]
+                                 :scenter,        # [batch_size, 1, 3]
+                                 :sradius],       # [batch_size, 1, 1]
+                                 [:doesintersect,
+                                 :t0,
+                                 :t1])
   size3 = add_sub_arr!(rayint, source([batch_size, width * height, 3]))
   size1 = add_sub_arr!(rayint, source([batch_size, width * height, 1]))
 
@@ -39,17 +44,13 @@ function rayintersect_arr(batch_size=1, width=10, height=10)
   dotarr = dot_arr()
   rdir, rorig, scenter, sradius, doesintersect, t0◂, t1◂ = ⬨(rayint)
   # Constants
-  zerosscalarsarr = add_sub_arr!(rayint, source(0.0))
-  falsessarr = add_sub_arr!(rayint, source(false))
-  truessarr = add_sub_arr!(rayint, source(true))
-
-  zerosscalar = ◃(zerosscalarsarr, 1)
-  falses = ◃(falsessarr, 1)
-  trues = ◃(truessarr, 1)
+  zerosscalar = ◃(add_sub_arr!(rayint, source(0.0)), 1)
+  falses = ◃(add_sub_arr!(rayint, source(false)), 1)
+  trues = ◃(add_sub_arr!(rayint, source(true)), 1)
 
   l = exbcast(scenter, sz3) - rorig    # [batch_size, width * height, 3]
   tca = dotarr(l, rdir)         # [batch_size, width * height, 1]
-  radius2 = sradius * sradius   # [batch_size, 1]
+  radius2 = sradius * sradius   # [batch_size, 1, 1]
   d2 = dotarr(l, l) - tca * tca     # [batch_size, width * height, 1]
   cond1 = tca < exbcast(zerosscalar, sz1) # [batch_size, width * height, 1]
 
@@ -126,22 +127,60 @@ function trc(nspheres=3, batch_size=1, width=10, height=10)
 end
 
 function rtabv(batch_size=1, width=10, height=10)
-  nmabv = NmAbValues(:sradius => AbValues(:size => Size([batch_size, 1, 1])),
-                     :scenter => AbValues(:size => Size([batch_size, 1, 3])),
-                     :rdir => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t0 => AbValues(:size => Size([batch_size, width * height, 1])),
-                     :t1 => AbValues(:size => Size([batch_size, width * height, 1])))
+  nmabv = NmAbVals(:sradius => AbVals(:size => Size([batch_size, 1, 1])),
+                     :scenter => AbVals(:size => Size([batch_size, 1, 3])),
+                     :rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])),
+                     :t0 => AbVals(:size => Size([batch_size, width * height, 1])),
+                     :t1 => AbVals(:size => Size([batch_size, width * height, 1])))
 end
 
 function trcabv(nspheres=3, batch_size=1, width=10, height=10)
-  nmabv = NmAbValues(:rdir => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :rorig => AbValues(:size => Size([batch_size, width * height, 3])),
-                     :doesintersect => AbValues(:size => Size([batch_size, width * height, 1])))
+  nmabv = NmAbVals(:rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+                     :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])))
   for i = 1:nspheres
-    nmabv[Symbol(:scenter, i)] = AbValues(:size => Size([batch_size, 1, 3]))
-    nmabv[Symbol(:sradius, i)] = AbValues(:size => Size([batch_size, 1, 1]))
+    nmabv[Symbol(:scenter, i)] = AbVals(:size => Size([batch_size, 1, 3]))
+    nmabv[Symbol(:sradius, i)] = AbVals(:size => Size([batch_size, 1, 1]))
   end
   nmabv
+end
+
+"Abv for raytraceintersection"
+function rint_xabv(batch_size=2, width=5, height=5)
+  NmAbVals(:rdir => AbVals(:size => Size([batch_size, width * height, 3])),
+           :rorig => AbVals(:size => Size([batch_size, width * height, 3])),
+           :doesintersect => AbVals(:size => Size([batch_size, width * height, 1])),
+           :scenter => AbVals(:size => Size([batch_size, width * height, 3])),
+           :sradius => AbVals(:size => Size([batch_size, width * height, 1])))
+end
+
+"Generate ray dirs and ray origins"
+function raydirs(spheres::Vector{<:Sphere},
+                 width::Integer=480,
+                 height::Integer=320,
+                 fov::Real=30.0)
+  inv_width = 1 / width
+  angle = tan(pi * 0.5 * fov / 100.0)
+  inv_height = 1 / height
+  aspect_ratio = width / height
+
+  image = zeros(width, height, 3)
+  rdirs = Array{Float64}(width * height, 3)
+  rorigs = Array{Float64}(width * height, 3)
+  j = 1
+  for y = 1:height, x = 1:width
+    xx = (2 * ((x + 0.5) * inv_width) - 1) * angle * aspect_ratio
+    yy = (1 - 2 * ((y + 0.5) * inv_height)) * angle
+    minus1 = -1.0
+    raydir = simplenormalize(Vec3([xx, yy, -1.0]))
+    rorigs = Vec3([0.0, 0.0, 0.0])
+    raydirs[j, :] = raydir
+    rorigs[j, :] = rayorig
+    # pixel = trc(Ray(Vec3([0.0, 0.0, 0.0]), raydir), spheres, 0)
+    # image[x, y, :] = pixel
+    j += 1
+  end
+  rdirs, rorigs
 end

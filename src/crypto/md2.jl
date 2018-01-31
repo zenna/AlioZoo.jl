@@ -12,7 +12,7 @@ function inverse_md2box(idx::Arrows.AbstractPort)
 end
 
 "function to compress the information of block into state"
-function compress(block, state, checksum, rounds=18)
+function compress(carr, block, state, checksum, rounds=18)
   newstate = Array{Any, 1}(size(state)...)
   newchecksum = Array{Any, 1}(size(checksum)...)
   foreach(1:16) do  i
@@ -22,17 +22,18 @@ function compress(block, state, checksum, rounds=18)
     newstate[i + 32] = b ⊻ newstate[i]
   end
 
-  t = 0
+  t = bsource!(carr, 0)
   foreach(1:rounds) do i
     foreach(1:length(newstate)) do j
       t = newstate[j] = newstate[j] ⊻ Arrows.md2box(t)
     end
     if i != rounds
-      next_t = t + i - 1
-      t = next_t % 256
+      next_t = t + bsource!(carr, i) - bsource!(carr, 1)
+      t = next_t % bsource!(carr, 256)
     end
   end
   l = checksum[end]
+  # @show unique(map(typeof, block))
   foreach(1:16) do i
     l = checksum[i] ⊻ md2box(block[i] ⊻ l)
     newchecksum[i] = l
@@ -40,14 +41,16 @@ function compress(block, state, checksum, rounds=18)
   newstate, newchecksum
 end
 
+import Arrows: bsource!
+
 "a hash compress the information of block and checksum in 16 bytes"
 function md2hash(rounds=18)
   carr = CompArrow(:compress, 16, 0);
   block = ▹(carr);
-  state = [0 for i in 1:48];
-  checksum = [0 for i in 1:16];
-  state, checksum = compress(block, state, checksum, rounds)
-  state, checksum = compress(checksum, state, checksum, rounds)
+  state = [bsource!(carr, 0) for i in 1:48];
+  checksum = [bsource!(carr, 0) for i in 1:16];
+  state, checksum = compress(carr, block, state, checksum, rounds)
+  state, checksum = compress(carr, checksum, state, checksum, rounds)
   foreach(link_to_parent!, state[1:16])
   Arrows.rm_partially_loose_sub_arrows!(carr)
   carr

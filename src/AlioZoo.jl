@@ -11,16 +11,11 @@ include("invgraphics/voxel_render.jl")
 include("invgraphics/util.jl")
 include("raytrace/raytrace.jl")
 include("raytrace/raytracearr.jl")
+include("draw/draw.jl")
 include("crypto/md2.jl")
 #include("stanford.jl")
 
-all_benchmark_arrows() = [fwd_2d_linkage(),
-                          trc()]
-
-"All pairs of (Arrow, XAbValues)"
-all_benchmark_arrow_xabv() = [(fwd_2d_linkage(), NmAbValues()),
-                              (md2hash(2), NmAbValues()),
-                              (trc(), trcabv())]
+include("bundles.jl")
 
 export fwd_2d_linkage,
        all_example_arrows,
