@@ -1,6 +1,3 @@
-using ImageView
-using JSON
-
 k(x) = x < 4 ? 1.0 : 0.0
 
 function distance(x, y, a, b, c)
