@@ -4,7 +4,7 @@ import DataStructures: DefaultDict
 function generate_dataset(n)
   hash_carr = AlioZoo.md2hash(2)
   inv_carr = hash_carr |> invert
-  wired = Arrows.solve_md2(inv_carr)
+  wired = Arrows.solve_scalar(inv_carr)
   hash_pgf = hash_carr |> pgf
   hash_pgf_f = julia(hash_pgf)
   parameters = DefaultDict(Array{Any, 1})

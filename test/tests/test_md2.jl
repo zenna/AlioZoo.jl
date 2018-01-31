@@ -17,7 +17,7 @@ test_md2()
 function test_solver()
   hash_carr = AlioZoo.md2hash(2)
   inv_carr = hash_carr |> invert
-  wired, wirer = Arrows.solve_md2(inv_carr)
+  wired, wirer = Arrows.solve_scalar(inv_carr)
   hash_pgf = hash_carr |> pgf
   inputs = 1:16
   outputs = map(zip(◂(hash_pgf), hash_pgf(inputs...))) do out
@@ -43,7 +43,7 @@ end
 function test_pipeline()
   carr = AlioZoo.md2hash(2)
   inv_carr = carr |> invert
-  wired, wirer = Arrows.solve_md2(inv_carr)
+  wired, wirer = Arrows.solve_scalar(inv_carr)
   context = Dict{Symbol, Any}()
   solved, unsolved, context = Arrows.find_unsolved_constraints(carr, inv_carr,
                                                               wirer, context)
