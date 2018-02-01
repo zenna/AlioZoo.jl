@@ -2,15 +2,6 @@ import AlioAnalysis: Sampler
 import Arrows: NmAbVals, AbVals, Size
 using NamedTuples
 
-# ## Bundles
-# "Arrow and associated data"
-# struct ArrowBundle
-#   fwdarr::Arrow
-#   xabv::XAbVals
-#   gen # Generator
-#   # template
-# end
-
 "Arrow bundle for MD2Hash"
 function md2bundle(; solveconstraints = true,
                      batch_size = 32,
@@ -19,26 +10,18 @@ function md2bundle(; solveconstraints = true,
                      kwargs...)
   f = md2hash(nrounds)
   if solveconstraints
-    invf = f |> invert
+    invf = invert(f)
     xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1]))
     for pnm in Arrows.port_sym_names(invf))
     traceprop!(invf, xabv)
 
-
-    invf, wirer = Arrows.solve_scalar(invf)
-    @grab wirer
-    xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1]))
-    for pnm in Arrows.port_sym_names(wirer))
-    traceprop!(wirer, xabv)
-    @assert false "even got here"
-
-
+    # Get XABV for psl in wirer
+    invf_wired, wirer = Arrows.solve_scalar(invf)
+    invfwiredwrapped = Arrows.wraponehot(invf_wired, bitlength)
+    pslxabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1, bitlength]))
+                       for pnm in Arrows.port_sym_names(invfwiredwrapped))
     traceprop!(invf, xabv)
-    @grab invfwired
-    @grab invfwiredwrapped = Arrows.wraponehot(invfwired, bitlength)
   end
-
-
   
   xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1, bitlength]))
                   for pnm in Arrows.port_sym_names(invfwiredwrapped))
@@ -49,7 +32,9 @@ function md2bundle(; solveconstraints = true,
                   xabv = xabv,
                   gen = xgen,
                   pgff = pgff,
-                  invf = invfwiredwrapped)
+                  pslxabv = pslxabv,
+                  invf = invfwiredwrapped,
+                  solved = solveconstraints)
 end
 
 "All bundles"
