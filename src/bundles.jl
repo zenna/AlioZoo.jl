@@ -12,17 +12,44 @@ using NamedTuples
 # end
 
 "Arrow bundle for MD2Hash"
-function md2bundle(; batch_size = 32, nrounds = 2, bitlength = 256, kwargs...)
+function md2bundle(; solveconstraints = true,
+                     batch_size = 32,
+                     nrounds = 2,
+                     bitlength = 256,
+                     kwargs...)
   f = md2hash(nrounds)
+  if solveconstraints
+    invf = f |> invert
+    xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1]))
+    for pnm in Arrows.port_sym_names(invf))
+    traceprop!(invf, xabv)
+
+
+    invf, wirer = Arrows.solve_scalar(invf)
+    @grab wirer
+    xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1]))
+    for pnm in Arrows.port_sym_names(wirer))
+    traceprop!(wirer, xabv)
+    @assert false "even got here"
+
+
+    traceprop!(invf, xabv)
+    @grab invfwired
+    @grab invfwiredwrapped = Arrows.wraponehot(invfwired, bitlength)
+  end
+
+
+  
   xabv = NmAbVals(pnm => AbVals(:size => Size([batch_size, 1, bitlength]))
-                  for pnm in Arrows.port_sym_names(f))
+                  for pnm in Arrows.port_sym_names(invfwiredwrapped))
   xgen = Sampler(()->[Arrows.onehot(rand(0:255, batch_size, 1), bitlength)
                       for nm ∈ Arrows.in_port_sym_names(f)])
   pgff = Arrows.wraponehot(pgf(f, pgf, xabv), bitlength)
   md2bundle = @NT(fwdarr = f,
                   xabv = xabv,
                   gen = xgen,
-                  pgff = pgff)
+                  pgff = pgff,
+                  invf = invfwiredwrapped)
 end
 
 "All bundles"
